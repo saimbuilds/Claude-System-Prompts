@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Terminal, Shield, Wrench, Type, Zap, Box, Database, Search, Target, CheckCircle2, Github } from 'lucide-react';
+import { Sun, Moon, Terminal, Shield, Wrench, Type, Zap, Box, Database, Search, Target, CheckCircle2, Github, Copy, Check } from 'lucide-react';
 import { PROMPTS_DATA, PROMPT_CONTENT } from './data';
 
 const App: React.FC = () => {
     const [activeId, setActiveId] = useState('01_role_and_intro');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -12,9 +13,20 @@ const App: React.FC = () => {
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
+    const handleCopy = () => {
+        const text = PROMPT_CONTENT[activeId] || '';
+        navigator.clipboard.writeText(text).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+
     // Simplistic Markdown Rendering (Bold, Codes, Lists)
     const renderContent = (text: string) => {
-        return text.split('\n').map((line, i) => {
+        const lines = text.split('\n');
+        // Remove the first line if it's a top-level heading (already shown as page title)
+        const contentLines = lines[0]?.startsWith('# ') ? lines.slice(1) : lines;
+        return contentLines.map((line, i) => {
             // Code blocks
             if (line.startsWith('```')) return null; // Logic for full code blocks would go here
 
@@ -114,8 +126,16 @@ const App: React.FC = () => {
                 <div className="content-wrapper">
                     {currentPrompt && (
                         <>
-                            <div className="prompt-category">{currentPrompt.category}</div>
-                            <h1 className="prompt-title">{currentPrompt.title}</h1>
+                            <div className="content-header">
+                                <div>
+                                    <div className="prompt-category">{currentPrompt.category}</div>
+                                    <h1 className="prompt-title">{currentPrompt.title}</h1>
+                                </div>
+                                <button className="copy-btn" onClick={handleCopy}>
+                                    {copied ? <Check size={15} /> : <Copy size={15} />}
+                                    {copied ? 'Copied!' : 'Copy'}
+                                </button>
+                            </div>
                             <div className="markdown-content">
                                 {renderContent(PROMPT_CONTENT[activeId] || '')}
                             </div>
