@@ -2,7 +2,7 @@
 
 > **The ultimate blueprint for building AI agents.** 100% Verbatim system prompts, capability instructions, and tool logic extracted directly from the Claude Code open-source repository. Organized into a professional docs interface for researchers and developers.
 
-## [Docs Web App](https://saimbuilds.github.io/claude-code-prompts/) (Syncing to GitHub Pages)
+## [Docs Web App](https://saimbuilds.github.io/Claude-System-Prompts/) (Syncing to GitHub Pages)
 
 This repository contains the exact, verbatim system prompts and capability instructions extracted directly from the **Claude Code** open-source repository.
 
