@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Terminal, Shield, Wrench, Type, Zap, Box, Database, Search, Target, CheckCircle2, Github, Copy, Check } from 'lucide-react';
+import { Sun, Moon, Terminal, Shield, Wrench, Type, Zap, Box, Database, Search, Target, CheckCircle2, Github, Copy, Check, Menu, X } from 'lucide-react';
 import { PROMPTS_DATA, PROMPT_CONTENT } from './data';
 
 const App: React.FC = () => {
     const [activeId, setActiveId] = useState('01_role_and_intro');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [copied, setCopied] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
     const handleCopy = () => {
         const text = PROMPT_CONTENT[activeId] || '';
@@ -21,31 +23,30 @@ const App: React.FC = () => {
         });
     };
 
+    const handleNavClick = (id: string) => {
+        setActiveId(id);
+        setIsMenuOpen(false); // Close menu on mobile after selection
+    };
+
     // Simplistic Markdown Rendering (Bold, Codes, Lists)
     const renderContent = (text: string) => {
         const lines = text.split('\n');
-        // Remove the first line if it's a top-level heading (already shown as page title)
         const contentLines = lines[0]?.startsWith('# ') ? lines.slice(1) : lines;
         return contentLines.map((line, i) => {
-            // Code blocks
-            if (line.startsWith('```')) return null; // Logic for full code blocks would go here
+            if (line.startsWith('```')) return null;
 
-            // Inline code
             let processed = line.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-            // Bold (Bold instead of wrapping in 88 or **)
             processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
             processed = processed.replace(/__([^_]+)__/g, '<strong>$1</strong>');
 
-            // Headings
             if (line.startsWith('# ')) return <h1 key={i}>{line.slice(2)}</h1>;
             if (line.startsWith('## ')) return <h2 key={i}>{line.slice(3)}</h2>;
             if (line.startsWith('### ')) return <h3 key={i}>{line.slice(4)}</h3>;
 
-            // Lists
             if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
                 return <li key={i} dangerouslySetInnerHTML={{ __html: processed.trim().slice(2) }} />;
             }
+            if (line.trim() === '') return <br key={i} />;
 
             return <p key={i} dangerouslySetInnerHTML={{ __html: processed }} />;
         });
@@ -77,32 +78,39 @@ const App: React.FC = () => {
     const currentPrompt = [...PROMPTS_DATA.global, ...PROMPTS_DATA.capabilities].find(p => p.id === activeId);
 
     return (
-        <div className="app-container">
-            <header className="app-header">
-                <div className="brand">CLAUDE CODE PROMPTS</div>
+        <div className={`app-container ${isMenuOpen ? 'menu-open' : ''}`}>
+            <div className={`sidebar-overlay ${isMenuOpen ? 'visible' : ''}`} onClick={toggleMenu} />
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div className="made-by">
+            <header className="app-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button className="mobile-menu-toggle" onClick={toggleMenu}>
+                        {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                    <div className="brand">CLAUDE CODE PROMPTS</div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="made-by-desktop">
                         Made by <a href="https://github.com/saimbuilds" target="_blank" rel="noopener noreferrer">Saim</a>
                     </div>
 
-                    <button className="theme-toggle" onClick={toggleTheme}>
+                    <button className="header-icon-btn" onClick={toggleTheme} aria-label="Toggle Theme">
                         {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                     </button>
 
-                    <a href="https://github.com/saimbuilds" target="_blank" rel="noopener noreferrer" className="theme-toggle">
+                    <a href="https://github.com/saimbuilds/claude-code-prompts" target="_blank" rel="noopener noreferrer" className="header-icon-btn" aria-label="Github Repository">
                         <Github size={18} />
                     </a>
                 </div>
             </header>
 
-            <aside className="sidebar">
+            <aside className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
                 <div className="nav-section-title">Global Instructions</div>
                 {PROMPTS_DATA.global.map(item => (
                     <div
                         key={item.id}
                         className={`nav-item ${activeId === item.id ? 'active' : ''}`}
-                        onClick={() => setActiveId(item.id)}
+                        onClick={() => handleNavClick(item.id)}
                     >
                         {getIcon(item.id)}
                         {item.title}
@@ -114,7 +122,7 @@ const App: React.FC = () => {
                     <div
                         key={item.id}
                         className={`nav-item ${activeId === item.id ? 'active' : ''}`}
-                        onClick={() => setActiveId(item.id)}
+                        onClick={() => handleNavClick(item.id)}
                     >
                         {getIcon(item.id)}
                         {item.title}
@@ -142,9 +150,13 @@ const App: React.FC = () => {
                         </>
                     )}
                 </div>
+                <footer className="mobile-footer">
+                    Made by <a href="https://github.com/saimbuilds" target="_blank" rel="noopener noreferrer">Saim</a>
+                </footer>
             </main>
         </div>
     );
 };
 
 export default App;
+
